@@ -5,7 +5,7 @@ function App() {
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        To-Do
+        To-Do List
       </Typography>
       <TaskList />
     </Container>

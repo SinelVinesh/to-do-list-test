@@ -110,7 +110,6 @@ export function TaskFormDialog({
             key={editorKey}
             value={formDescription}
             onChange={handleDescriptionChange}
-            placeholder="Type / for commands…"
             autoFocus={false}
           />
         )}

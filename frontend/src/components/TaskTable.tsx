@@ -30,37 +30,6 @@ export interface TaskTableProps {
   onPageChange: (page: number) => void;
 }
 
-/**
- * Try to extract a short plain-text preview from either a Yoopta JSON string
- * or legacy plain text. Returns up to `maxLen` characters.
- */
-function descriptionPreview(raw: string | null, maxLen = 120): string {
-  if (!raw || !raw.trim()) return '—';
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      // Walk Yoopta blocks and extract text nodes
-      const texts: string[] = [];
-      for (const block of Object.values(parsed) as any[]) {
-        const elements = block?.value;
-        if (!Array.isArray(elements)) continue;
-        for (const el of elements) {
-          if (!el?.children) continue;
-          for (const child of el.children) {
-            if (child?.text) texts.push(child.text);
-          }
-        }
-      }
-      const joined = texts.join(' ').trim();
-      if (!joined) return '—';
-      return joined.length > maxLen ? joined.slice(0, maxLen) + '…' : joined;
-    }
-  } catch {
-    // Legacy plain text
-  }
-  return raw.length > maxLen ? raw.slice(0, maxLen) + '…' : raw;
-}
-
 export function TaskTable({
   tasks,
   total,
@@ -92,21 +61,17 @@ export function TaskTable({
             <TableRow>
               <TableCell padding="checkbox" />
               <TableCell>Title</TableCell>
-              <TableCell>Description</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {[1, 2, 3, 4, 5].map((i) => (
+            {[1, 2, 3].map((i) => (
               <TableRow key={i}>
                 <TableCell padding="checkbox">
                   <Skeleton variant="circular" width={24} height={24} />
                 </TableCell>
                 <TableCell>
-                  <Skeleton variant="text" width="60%" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" width="40%" />
+                  <Skeleton variant="text" width="100%" />
                 </TableCell>
                 <TableCell align="right">
                   <Skeleton
@@ -132,20 +97,31 @@ export function TaskTable({
             <TableRow>
               <TableCell padding="checkbox">Done</TableCell>
               <TableCell>Title</TableCell>
-              <TableCell>Description</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {tasks.map((task) => (
-              <TableRow key={task.id}>
-                <TableCell padding="checkbox">
+              <TableRow
+                key={task.id}
+                onClick={() => onEdit(task)}
+                sx={{
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              >
+                <TableCell 
+                  padding="checkbox" 
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Checkbox
                     checked={task.completed}
                     onChange={() => onToggleComplete(task)}
                   />
                 </TableCell>
-                <TableCell>
+                <TableCell onClick={() => onEdit(task)}>
                   <Typography
                     component="span"
                     variant="body2"
@@ -157,14 +133,10 @@ export function TaskTable({
                     {task.title?.trim() || '—'}
                   </Typography>
                 </TableCell>
-                <TableCell>
-                  <Box sx={{ maxWidth: 300, maxHeight: 80, overflow: 'hidden' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {descriptionPreview(task.description)}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell align="right">
+                <TableCell 
+                  align="right" 
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <IconButton size="small" onClick={() => onEdit(task)} aria-label="Edit">
                     <EditIcon />
                   </IconButton>
