@@ -121,7 +121,10 @@ export function TaskTable({
                     onChange={() => onToggleComplete(task)}
                   />
                 </TableCell>
-                <TableCell onClick={() => onEdit(task)}>
+                <TableCell 
+                onClick={() => onEdit(task)}
+                width={"80%"}
+                >
                   <Typography
                     component="span"
                     variant="body2"
