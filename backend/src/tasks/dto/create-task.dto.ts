@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, MaxLength, IsDateString } from 'class-validator';
 
 export class CreateTaskDto {
   @IsString()
@@ -12,4 +12,8 @@ export class CreateTaskDto {
   @IsOptional()
   @IsBoolean()
   completed: boolean = false;
+
+  @IsOptional()
+  @IsDateString()
+  dueDate?: string;
 }

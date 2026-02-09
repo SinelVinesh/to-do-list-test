@@ -5,6 +5,7 @@ export interface Task {
   title: string;
   description: string | null;
   completed: boolean;
+  dueDate: string | null;
   createdAt: string;
 }
 
@@ -17,12 +18,14 @@ export interface CreateTaskInput {
   title: string;
   description?: string;
   completed?: boolean;
+  dueDate?: string;
 }
 
 export interface UpdateTaskInput {
   title?: string;
   description?: string;
   completed?: boolean;
+  dueDate?: string;
 }
 
 async function request<T>(

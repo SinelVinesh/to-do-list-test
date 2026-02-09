@@ -11,6 +11,8 @@ import {
   Typography,
   CircularProgress,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { type Dayjs } from 'dayjs';
 import { tasksApi, type Task } from '../api/tasks';
 import { YooptaDescriptionEditor } from './YooptaDescriptionEditor';
 
@@ -32,6 +34,7 @@ export function TaskFormDialog({
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formCompleted, setFormCompleted] = useState(false);
+  const [formDueDate, setFormDueDate] = useState<Dayjs | null>(null);
   const [submitLoading, setSubmitLoading] = useState(false);
 
   // Key to force-remount the editor when the dialog opens with different data
@@ -43,10 +46,12 @@ export function TaskFormDialog({
         setFormTitle(initialTask.title);
         setFormDescription(initialTask.description ?? '');
         setFormCompleted(initialTask.completed);
+        setFormDueDate(initialTask.dueDate ? dayjs(initialTask.dueDate) : null);
       } else {
         setFormTitle('');
         setFormDescription('');
         setFormCompleted(false);
+        setFormDueDate(null);
       }
       // Force remount the Yoopta editor so it picks up the new value
       setEditorKey((k) => k + 1);
@@ -65,11 +70,13 @@ export function TaskFormDialog({
     setSubmitLoading(true);
     try {
       const descriptionPayload = formDescription.trim() || undefined;
+      const dueDatePayload = formDueDate ? formDueDate.format('YYYY-MM-DD') : undefined;
       if (initialTask) {
         await tasksApi.update(initialTask.id, {
           title: formTitle.trim(),
           description: descriptionPayload,
           completed: formCompleted,
+          dueDate: dueDatePayload,
         });
         onSuccess('Task updated');
       } else {
@@ -77,6 +84,7 @@ export function TaskFormDialog({
           title: formTitle.trim(),
           description: descriptionPayload,
           completed: formCompleted,
+          dueDate: dueDatePayload,
         });
         onSuccess('Task created');
       }
@@ -100,6 +108,19 @@ export function TaskFormDialog({
           required
           value={formTitle}
           onChange={(e) => setFormTitle(e.target.value)}
+        />
+        <DatePicker
+          label="Due Date"
+          value={formDueDate}
+          onChange={(newValue) => setFormDueDate(newValue)}
+          format="DD/MM/YYYY"
+          slotProps={{
+            textField: {
+              margin: 'dense',
+              fullWidth: true,
+              sx: { mt: 2 },
+            },
+          }}
         />
 
         <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
