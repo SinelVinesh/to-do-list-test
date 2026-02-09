@@ -15,7 +15,6 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { Task } from '../api/tasks';
-
 export interface TaskTableProps {
   tasks: Task[];
   total: number;
@@ -29,6 +28,37 @@ export interface TaskTableProps {
   onDelete: (task: Task) => void;
   onToggleComplete: (task: Task) => void;
   onPageChange: (page: number) => void;
+}
+
+/**
+ * Try to extract a short plain-text preview from either a Yoopta JSON string
+ * or legacy plain text. Returns up to `maxLen` characters.
+ */
+function descriptionPreview(raw: string | null, maxLen = 120): string {
+  if (!raw || !raw.trim()) return '—';
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      // Walk Yoopta blocks and extract text nodes
+      const texts: string[] = [];
+      for (const block of Object.values(parsed) as any[]) {
+        const elements = block?.value;
+        if (!Array.isArray(elements)) continue;
+        for (const el of elements) {
+          if (!el?.children) continue;
+          for (const child of el.children) {
+            if (child?.text) texts.push(child.text);
+          }
+        }
+      }
+      const joined = texts.join(' ').trim();
+      if (!joined) return '—';
+      return joined.length > maxLen ? joined.slice(0, maxLen) + '…' : joined;
+    }
+  } catch {
+    // Legacy plain text
+  }
+  return raw.length > maxLen ? raw.slice(0, maxLen) + '…' : raw;
 }
 
 export function TaskTable({
@@ -117,21 +147,22 @@ export function TaskTable({
                 </TableCell>
                 <TableCell>
                   <Typography
+                    component="span"
                     variant="body2"
-                    sx={{ textDecoration: task.completed ? 'line-through' : 'none' }}
+                    sx={{
+                      textDecoration: task.completed ? 'line-through' : 'none',
+                      display: 'block',
+                    }}
                   >
-                    {task.title}
+                    {task.title?.trim() || '—'}
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    noWrap
-                    sx={{ maxWidth: 200 }}
-                  >
-                    {task.description || '—'}
-                  </Typography>
+                  <Box sx={{ maxWidth: 300, maxHeight: 80, overflow: 'hidden' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {descriptionPreview(task.description)}
+                    </Typography>
+                  </Box>
                 </TableCell>
                 <TableCell align="right">
                   <IconButton size="small" onClick={() => onEdit(task)} aria-label="Edit">

@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/theme.ts","./src/vite-env.d.ts","./src/api/tasks.ts","./src/components/deletetaskdialog.tsx","./src/components/errorboundary.tsx","./src/components/taskformdialog.tsx","./src/components/tasktable.tsx","./src/components/yooptadescriptioneditor.tsx","./src/pages/tasklist.tsx"],"version":"5.9.3"}

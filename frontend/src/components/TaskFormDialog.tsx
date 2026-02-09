@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -12,6 +12,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { tasksApi, type Task } from '../api/tasks';
+import { YooptaDescriptionEditor } from './YooptaDescriptionEditor';
 
 export interface TaskFormDialogProps {
   open: boolean;
@@ -33,6 +34,9 @@ export function TaskFormDialog({
   const [formCompleted, setFormCompleted] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
 
+  // Key to force-remount the editor when the dialog opens with different data
+  const [editorKey, setEditorKey] = useState(0);
+
   useEffect(() => {
     if (open) {
       if (initialTask) {
@@ -44,8 +48,14 @@ export function TaskFormDialog({
         setFormDescription('');
         setFormCompleted(false);
       }
+      // Force remount the Yoopta editor so it picks up the new value
+      setEditorKey((k) => k + 1);
     }
   }, [open, initialTask]);
+
+  const handleDescriptionChange = useCallback((serialised: string) => {
+    setFormDescription(serialised);
+  }, []);
 
   const handleSubmit = async () => {
     if (!formTitle.trim()) {
@@ -54,17 +64,18 @@ export function TaskFormDialog({
     }
     setSubmitLoading(true);
     try {
+      const descriptionPayload = formDescription.trim() || undefined;
       if (initialTask) {
         await tasksApi.update(initialTask.id, {
           title: formTitle.trim(),
-          description: formDescription.trim() || undefined,
+          description: descriptionPayload,
           completed: formCompleted,
         });
         onSuccess('Task updated');
       } else {
         await tasksApi.create({
           title: formTitle.trim(),
-          description: formDescription.trim() || undefined,
+          description: descriptionPayload,
           completed: formCompleted,
         });
         onSuccess('Task created');
@@ -78,7 +89,7 @@ export function TaskFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>{initialTask ? 'Edit task' : 'Add task'}</DialogTitle>
       <DialogContent>
         <TextField
@@ -90,21 +101,20 @@ export function TaskFormDialog({
           value={formTitle}
           onChange={(e) => setFormTitle(e.target.value)}
         />
-        <TextField
-          margin="dense"
-          label="Description"
-          fullWidth
-          multiline
-          required
-          rows={4}
-          sx={{
-            '& .MuiInputBase-input': {
-              resize: 'vertical', // Allows vertical resizing by the user
-            },
-          }}
-          value={formDescription}
-          onChange={(e) => setFormDescription(e.target.value)}
-        />
+
+        <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
+          Description
+        </Typography>
+        {open && (
+          <YooptaDescriptionEditor
+            key={editorKey}
+            value={formDescription}
+            onChange={handleDescriptionChange}
+            placeholder="Type / for commands…"
+            autoFocus={false}
+          />
+        )}
+
         <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
           <Checkbox
             checked={formCompleted}
